@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caderno de Perguntas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5dc;
+            padding: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.1"><rect fill="none" stroke="black" stroke-width="2" x="10" y="10" width="80" height="80" rx="10" ry="10"/></svg>');
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fffacd;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #8b4513;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px dashed #8b4513;
+            padding-bottom: 15px;
+        }
+        
+        h1 {
+            color: #8b4513;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 0px #d2b48c;
+        }
+        
+        .subtitle {
+            color: #654321;
+            font-style: italic;
+            margin-top: 5px;
+        }
+        
+        .form-section {
+            background-color: #fafad2;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #d2b48c;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #d2b48c;
+            border-radius: 5px;
+            background-color: #fffff0;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #654321;
+        }
+        
+        .questions-container {
+            margin-top: 20px;
+        }
+        
+        .question-card {
+            background-color: #fffacd;
+            border: 1px solid #d2b48c;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .question-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .answers-container {
+            margin-top: 10px;
+            padding-left: 20px;
+            border-left: 2px dotted #d2b48c;
+        }
+        
+        .answer-card {
+            background-color: #f5f5dc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px dashed #d2b48c;
+        }
+        
+        .answer-form {
+            margin-top: 10px;
+        }
+        
+        .timestamp {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        .no-questions {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #8b4513;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .instructions {
+            background-color: #fafad2;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #d2b48c;
+            font-size: 0.9rem;
+            color: #654321;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📓 Caderno de Perguntas</h1>
+            <p class="subtitle">Faça suas perguntas e responda às dos outros, como antigamente!</p>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>Como funciona:</strong> Faça uma pergunta no campo abaixo. Outras pessoas podem responder às suas perguntas, e você pode responder às perguntas dos outros. Todas as perguntas e respostas são anônimas!</p>
+        </div>
+        
+        <div class="form-section">
+            <h2>Faça sua pergunta:</h2>
+            <textarea id="questionInput" placeholder="Digite sua pergunta aqui..." rows="3"></textarea>
+            <button id="submitQuestion">Enviar Pergunta</button>
+        </div>
+        
+        <div class="questions-container" id="questionsContainer">
+            <!-- As perguntas serão inseridas aqui dinamicamente -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const questionInput = document.getElementById('questionInput');
+            const submitQuestionBtn = document.getElementById('submitQuestion');
+            const questionsContainer = document.getElementById('questionsContainer');
+            
+            // Carregar perguntas do localStorage
+            let questions = JSON.parse(localStorage.getItem('cadernoPerguntas')) || [];
+            
+            // Função para renderizar as perguntas
+            function renderQuestions() {
+                questionsContainer.innerHTML = '';
+                
+                if (questions.length === 0) {
+                    questionsContainer.innerHTML = '<div class="no-questions">Nenhuma pergunta ainda. Seja o primeiro a fazer uma pergunta!</div>';
+                    return;
+                }
+                
+                // Ordenar perguntas por data (mais recentes primeiro)
+                questions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                questions.forEach((question, index) => {
+                    const questionCard = document.createElement('div');
+                    questionCard.className = 'question-card';
+                    
+                    const questionText = document.createElement('div');
+                    questionText.className = 'question-text';
+                    questionText.textContent = question.text;
+                    
+                    const timestamp = document.createElement('div');
+                    timestamp.className = 'timestamp';
+                    timestamp.textContent = formatDate(question.date);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '✕';
+                    deleteBtn.onclick = () => deleteQuestion(index);
+                    
+                    const answersContainer = document.createElement('div');
+                    answersContainer.className = 'answers-container';
+                    
+                    // Adicionar respostas existentes
+                    question.answers.forEach(answer => {
+                        const answerCard = document.createElement('div');
+                        answerCard.className = 'answer-card';
+                        answerCard.innerHTML = `
+                            <div>${answer.text}</div>
+                            <div class="timestamp">${formatDate(answer.date)}</div>
+                        `;
+                        answersContainer.appendChild(answerCard);
+                    });
+                    
+                    // Formulário para nova resposta
+                    const answerForm = document.createElement('div');
+                    answerForm.className = 'answer-form';
+                    answerForm.innerHTML = `
+                        <textarea placeholder="Digite sua resposta..." rows="2" id="answerInput-${index}"></textarea>
+                        <button onclick="addAnswer(${index})">Responder</button>
+                    `;
+                    
+                    questionCard.appendChild(deleteBtn);
+                    questionCard.appendChild(questionText);
+                    questionCard.appendChild(timestamp);
+                    questionCard.appendChild(answersContainer);
+                    questionCard.appendChild(answerForm);
+                    
+                    questionsContainer.appendChild(questionCard);
+                });
+            }
+            
+            // Função para adicionar uma nova pergunta
+            function addQuestion() {
+                const questionText = questionInput.value.trim();
+                
+                if (questionText === '') {
+                    alert('Por favor, digite uma pergunta!');
+                    return;
+                }
+                
+                const newQuestion = {
+                    text: questionText,
+                    date: new Date().toISOString(),
+                    answers: []
+                };
+                
+                questions.push(newQuestion);
+                localStorage.setItem('cadernoPerguntas', JSON.stringify(questions));
+                
+                questionInput.value = '';
+                renderQuestions();
+            }
+            
+            // Função para adicionar uma resposta
+            window.addAnswer = function(questionIndex) {
+                const answerInput = document.getElementById(`answerInput-${questionIndex}`);
+                const answerText = answerInput.value.trim();
+                
+                if (answerText === '') {
+                    alert('Por favor, digite uma resposta!');
+                    return;
+                }
+                
+                const newAnswer = {
+                    text: answerText,
+                    date: new Date().toISOString()
+                };
+                
+                questions[questionIndex].answers.push(newAnswer);
+                localStorage.setItem('cadernoPerguntas', JSON.stringify(questions));
+                
+                answerInput.value = '';
+                renderQuestions();
+            }
+            
+            // Função para excluir uma pergunta
+            function deleteQuestion(questionIndex) {
+                if (confirm('Tem certeza que deseja excluir esta pergunta?')) {
+                    questions.splice(questionIndex, 1);
+                    localStorage.setItem('cadernoPerguntas', JSON.stringify(questions));
+                    renderQuestions();
+                }
+            }
+            
+            // Função para formatar a data
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            }
+            
+            // Event listeners
+            submitQuestionBtn.addEventListener('click', addQuestion);
+            
+            // Permitir enviar pergunta com Enter (mas apenas se Shift+Enter não for pressionado)
+            questionInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    addQuestion();
+                }
+            });
+            
+            // Renderizar perguntas ao carregar a página
+            renderQuestions();
+        });
+    </script>
+</body>
+</html>
